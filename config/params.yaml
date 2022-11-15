@@ -7,3 +7,14 @@ cam_rad_fusion:
   # Save
   saveDirectory: "/home/ysh/catkin_ws/src/cam_rad_fusion/DATA/"
   save_count_duty: 5
+  save_flag: false
+
+  # Camera Calibration
+  K: [2340.375977  ,0.0          ,745.556014
+     ,0.0          ,2351.579554  ,577.711325
+     ,0.0          ,0.0          ,1.0       ]
+  D: [-0.137154    ,0.628614     ,0.004937     ,0.001995     ,0.0]
+
+
+  # Radar voxel grid
+  radar_voxel_param: 3.00
