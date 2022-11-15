@@ -4,3 +4,6 @@ cam_rad_fusion:
   lidarTopic: "/ouster/points"
   radarTopic: "/point_cloud"
 
+  # Save
+  saveDirectory: "/home/ysh/catkin_ws/src/cam_rad_fusion/DATA/"
+  save_count_duty: 5

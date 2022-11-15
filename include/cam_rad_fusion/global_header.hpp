@@ -24,6 +24,35 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>  // voxel grid filter
+
 
 // CPP, STL
 #include <string>
+
+
+
+namespace pcl{
+
+struct PointRADAR
+  {
+    PCL_ADD_POINT4D                     // Macro quad-word XYZ
+    float intensity;                    // Laser intensity
+    float normal_x;                     // normal_x
+    float normal_y;                     // normal_y
+    float normal_z;                     // normal_z
+    float curvature;                    // curvature
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW     // Ensure proper alignment
+  } EIGEN_ALIGN16;
+}
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(PointRADAR,
+                                  (float, x, x)
+                                  (float, y, y)
+                                  (float, z, z)
+                                  (float, intensity, intensity)
+                                  (float, normal_x, normal_x)
+                                  (float, normal_y, normal_y)
+                                  (float, normal_z, normal_z)
+                                  (float, curvature, curvature)
+)
