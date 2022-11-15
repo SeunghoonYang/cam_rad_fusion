@@ -14,9 +14,11 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
 )
+find_package(OpenCV REQUIRED)
 
 catkin_package(
 #  INCLUDE_DIRS include
+  LIBRARIES opencv
 #  LIBRARIES cam_rad_fusion
 #  CATKIN_DEPENDS cv_bridge dynamic_reconfigure image_transport pcl pcl_ros roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
@@ -25,7 +27,8 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 add_executable(fusion src/main.cpp)
-target_link_libraries(fusion ${catkin_LIBRARIES})
+target_link_libraries(fusion ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
