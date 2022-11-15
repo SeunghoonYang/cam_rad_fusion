@@ -1,0 +1,6 @@
+cam_rad_fusion:
+  # Topics
+  imageTopic: "/camera_array/cam0/image_raw"
+  lidarTopic: "/ouster/points"
+  radarTopic: "/point_cloud"
+
