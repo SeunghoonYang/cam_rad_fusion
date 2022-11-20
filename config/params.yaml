@@ -1,15 +1,15 @@
 cam_rad_fusion:
   # Topics
-  imageTopic: "/camera_array/cam0/image_raw"
+  imageTopic: "/camera_array/left/image_raw"
   lidarTopic: "/ouster/points"
   radarTopic: "/point_cloud"
 
   # Save
   saveDirectory: "/home/ysh/catkin_ws/src/cam_rad_fusion/DATA/"
   save_count_duty: 5
-  save_flag: false
+  save_flag: False
 
-  # Camera Calibration
+  # Camera-Radar Calibration
   K: [2340.375977  ,0.0          ,745.556014
      ,0.0          ,2351.579554  ,577.711325
      ,0.0          ,0.0          ,1.0       ]
@@ -17,4 +17,4 @@ cam_rad_fusion:
 
 
   # Radar voxel grid
-  radar_voxel_param: 3.00
+  # radar_voxel_param: 0.50

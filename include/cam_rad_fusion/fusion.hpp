@@ -39,7 +39,7 @@ private:
     double calib_r;  double calib_p;  double calib_y;
 
     // radar voxel grid filter
-    double radar_voxel_param;
+    // double radar_voxel_param;
 
 
 public:
@@ -52,10 +52,10 @@ public:
         nh.param<std::string>("cam_rad_fusion/radarTopic", radar_topic, "/point_cloud");
         nh.param<std::string>("cam_rad_fusion/saveDirectory", saveDirectory, "/home/ysh/catkin_ws/src/cam_rad_fusion/DATA/");
         nh.param<int>("cam_rad_fusion/save_count_duty", save_count_duty, 5);
-        nh.param<bool>("cam_rad_fusion/save_flag", save_flag, true);
-        nh.param<std::vector<double>>("/cam_rad_fusion/K", K_coeff, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
-        nh.param<std::vector<double>>("/cam_rad_fusion/D", dist_coeff, {0.0, 0.0, 0.0, 0.0, 0.0});
-        nh.param<double>("/cam_rad_fusion/radar_voxel_param", radar_voxel_param, 0.5);
+        nh.param<bool>("cam_rad_fusion/save_flag", save_flag, false);
+        nh.param<std::vector<double>>("/cam_rad_fusion/K", K_coeff, {2340.375977, 0.0, 745.556014, 0.0, 2351.579554, 577.711325, 0.0, 0.0, 1.0});
+        nh.param<std::vector<double>>("/cam_rad_fusion/D", dist_coeff, {-0.137154, 0.628614, 0.004937, 0.001995, 0.0});
+        // nh.param<double>("/cam_rad_fusion/radar_voxel_param", radar_voxel_param, 0.5);
 
 
         // message filter
@@ -64,6 +64,8 @@ public:
         radar_sub.subscribe(nh, radar_topic, 1);
         sync_.reset(new Sync(MySyncPolicy(10), image_sub, lidar_sub, radar_sub));
         sync_->registerCallback(boost::bind(&FUSION::callback, this, _1, _2, _3));
+        // sync_.reset(new Sync(MySyncPolicy(10), image_sub, radar_sub));
+        // sync_->registerCallback(boost::bind(&FUSION::callback, this, _1, _2));
 
         image_pub = it_.advertise("/FUSION/image_out", 1);
         cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/FUSION/cloud_out", 1);
@@ -73,11 +75,12 @@ public:
     }
 
 
-
+    
+    // void callback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::PointCloud2ConstPtr& radar)
     void callback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::PointCloud2ConstPtr& lidar, const sensor_msgs::PointCloud2ConstPtr& radar)
     {
         
-        // ROS_INFO("Synchronization Successful!!");
+        ROS_INFO("Synchronization Successful!!");
         //std::cout << "Your image time : " << image->header.stamp.sec << image->header.stamp.nsec << std::endl;
         //std::cout << "Your lidar time : " << lidar->header.stamp.sec << lidar->header.stamp.nsec << std::endl;  
         //std::cout << "Your radar time : " << radar->header.stamp.sec << radar->header.stamp.nsec << std::endl;
@@ -157,7 +160,26 @@ public:
         //     radar4d.at(i).x;
         //     radar4d.at(i).y;
         //     radar4d.at(i).z;
-        // }
+        //     radar4d.at(i).intensity;
+        // }        // // change format ROS -> PCL
+        // pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr;  // pointer declaration
+        // cloud_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>()); // dynamic allocation
+        // pcl::fromROSMsg(*lidar, *cloud_ptr);
+
+        // // TODO : use pcl function with "cloud_ptr"
+        // pcl::VoxelGrid<pcl::PointXYZ> voxel_grid;
+        // pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_voxel(new pcl::PointCloud<pcl::PointXYZ>);
+        // voxel_grid.setInputCloud(cloud_ptr);
+        // voxel_grid.setLeafSize(0.50f, 0.50f, 0.50f);
+        // voxel_grid.filter(*cloud_voxel);
+
+        // // save PCD
+        // std::string filename_lidar = saveDirectory + "lidar" + count_str_padded + ".pcd";
+        // if((count % save_count_duty == 0) && save_flag)
+        // pcl::io::savePCDFileASCII(filename_lidar, *cloud_ptr);
+
+        // // change format PCL -> ROS
+        // // moved to calibration part
 
         // save PCD
         std::string filename_radar = saveDirectory + "radar4d" + count_str_padded + ".pcd";
@@ -201,16 +223,16 @@ public:
         // voxelize radar
         pcl::PointCloud<pcl::PointXYZ>::Ptr radar_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         copyRadar(radar4d, radar_cloud);
-        pcl::VoxelGrid<pcl::PointXYZ> voxel_grid_radar;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr radar_voxel(new pcl::PointCloud<pcl::PointXYZ>);
-        voxel_grid_radar.setInputCloud(radar_cloud);
-        voxel_grid_radar.setLeafSize(radar_voxel_param, radar_voxel_param, radar_voxel_param);
-        voxel_grid_radar.filter(*radar_voxel);
+        // pcl::VoxelGrid<pcl::PointXYZ> voxel_grid_radar;
+        // pcl::PointCloud<pcl::PointXYZ>::Ptr radar_voxel(new pcl::PointCloud<pcl::PointXYZ>);
+        // voxel_grid_radar.setInputCloud(radar_cloud);
+        // voxel_grid_radar.setLeafSize(radar_voxel_param, radar_voxel_param, radar_voxel_param);
+        // voxel_grid_radar.filter(*radar_voxel);
 
         // change format PCL -> ROS
         sensor_msgs::PointCloud2::Ptr cloud_msg;
         cloud_msg.reset(new sensor_msgs::PointCloud2());
-        pcl::toROSMsg(*radar_voxel, *cloud_msg);
+        pcl::toROSMsg(*radar_cloud, *cloud_msg);
         cloud_msg->header.stamp    = ros::Time::now();
         cloud_msg->header.frame_id = "os_sensor";
         cloud_pub.publish(cloud_msg);
@@ -231,26 +253,45 @@ public:
         //     int v = radar2image(1)/radar2image(2);  // normalization y / z
         //     if ((0 < u) && (u < 1440) && (0 < v) && (v < 1080))
         //     cv::circle(image_rectify, cv::Point(u,v), 4.0, cv::Scalar(0, 0, color), -1, -1, 0);
-        //     //ROS_INFO("u : %d v : %d", u, v);
-        //     //ROS_INFO("radar2image : %f, %f, %f, %f", radar2image(0), radar2image(1), radar2image(2),radar2image(3) );
+        //     ROS_INFO("u : %d v : %d", u, v);
+        //     ROS_INFO("radar2image : %f, %f, %f, %f", radar2image(0), radar2image(1), radar2image(2),radar2image(3) );
         // }
 
-            for (int i = 0; i < radar_voxel->size(); i++)
+        for (int i = 0; i < radar_cloud->size(); i++)
         {
-            double x_temp = radar_voxel->points.at(i).x;
-            double y_temp = radar_voxel->points.at(i).y;
-            double z_temp = radar_voxel->points.at(i).z;
-            int color;
-            if ( y_temp> 51) {color = 255;}
-            else {color = 5 * y_temp;}
+            double x_temp = radar_cloud->points.at(i).x;
+            double y_temp = radar_cloud->points.at(i).y;
+            double z_temp = radar_cloud->points.at(i).z;
 
             Eigen::Vector4d radar3Dpoints(x_temp, y_temp, z_temp, 1);
             Eigen::Vector4d radar2image(0.0, 0.0, 0.0, 0.0);
             radar2image = Intrinsic * Extrinsic * radar3Dpoints;
             int u = radar2image(0)/radar2image(2);  // normalization x / z
             int v = radar2image(1)/radar2image(2);  // normalization y / z
+
+
+            // Insert Color as Rainbow
+            cv::Scalar color;
+            double max_y = 35.0;
+            double min_y = 7.0;
+            double too_far_y = 40.0;
+            
+            cv::Scalar RED      = cv::Scalar(50,50,255);
+            cv::Scalar YELLOW   = cv::Scalar(50,255,255);
+            cv::Scalar GREEN    = cv::Scalar(50,255,50);
+            cv::Scalar BLUE     = cv::Scalar(255,50,50);
+            cv::Scalar PURPLE   = cv::Scalar(255,50,200);
+            
+            if      (y_temp < min_y) {color = RED;}
+            else if (y_temp < min_y + 0.25 * (max_y - min_y)) {color = RED    + (YELLOW - RED)   * (y_temp - min_y - (max_y - min_y) * 0) / (max_y - min_y) * 4.0;}
+            else if (y_temp < min_y + 0.50 * (max_y - min_y)) {color = YELLOW + (GREEN - YELLOW) * (y_temp - min_y - (max_y - min_y) * 0.25) / (max_y - min_y) * 4.0;}
+            else if (y_temp < min_y + 0.75 * (max_y - min_y)) {color = GREEN  + (BLUE - GREEN)   * (y_temp - min_y - (max_y - min_y) * 0.50) / (max_y - min_y) * 4.0;}
+            else if (y_temp < max_y)                          {color = BLUE   + (PURPLE - BLUE)  * (y_temp - min_y - (max_y - min_y) * 0.75) / (max_y - min_y) * 4.0;}
+            else if (y_temp < too_far_y)                      {color = PURPLE;}
+            else {color = cv::Scalar(100, 100, 100);}
+            
             if ((0 < u) && (u < 1440) && (0 < v) && (v < 1080))
-            cv::circle(image_rectify, cv::Point(u,v), 4.0, cv::Scalar(0, 0, color), -1, -1, 0);
+            cv::circle(image_rectify, cv::Point(u,v), 3, color, -1, -1, 0);
             //ROS_INFO("u : %d v : %d", u, v);
             //ROS_INFO("radar2image : %f, %f, %f, %f", radar2image(0), radar2image(1), radar2image(2),radar2image(3) );
         }
